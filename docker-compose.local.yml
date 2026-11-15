@@ -1,0 +1,9 @@
+# Uso local: docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+# Publica as portas so na sua maquina (no Coolify quem roteia e o proxy).
+services:
+  backend:
+    ports:
+      - "8000:80"
+  frontend:
+    ports:
+      - "5173:80"

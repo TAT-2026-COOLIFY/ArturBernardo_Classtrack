@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------
+# ClassTrack - stack completa (MySQL + API Laravel + Frontend React)
+# Usado pelo Coolify (Build Pack: Docker Compose) e para rodar local.
+# Os dominios de cada servico sao configurados no painel do Coolify.
+# ---------------------------------------------------------------
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-classtrack}
+      MYSQL_USER: ${DB_USERNAME:-classtrack}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Defina DB_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./Backend
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      APP_NAME: ClassTrack
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:?Defina APP_KEY}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      APP_LOCALE: pt_BR
+      APP_FALLBACK_LOCALE: pt_BR
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: ${DB_DATABASE:-classtrack}
+      DB_USERNAME: ${DB_USERNAME:-classtrack}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SCHEME: ${MAIL_SCHEME:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@classtrack.local}
+      MAIL_FROM_NAME: ClassTrack
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      RUN_SEEDER: ${RUN_SEEDER:-true}
+    volumes:
+      - backend-storage:/var/www/html/storage/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:
+  backend-storage:
