@@ -29,5 +29,5 @@ jobs:
     steps:
       - name: Disparar o Deploy Webhook
         run: |
-          curl --fail-with-body --request GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+          curl --fail-with-body --request POST "${{ secrets.COOLIFY_WEBHOOK }}" \
             --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
