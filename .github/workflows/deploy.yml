@@ -1,0 +1,33 @@
+name: CI/CD - Deploy no Coolify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o codigo
+        uses: actions/checkout@v4
+
+      - name: Build da imagem do backend
+        run: docker build -t classtrack-backend ./Backend
+
+      - name: Build da imagem do frontend
+        run: docker build --build-arg VITE_API_URL=https://api.exemplo.com -t classtrack-frontend ./Frontend
+
+  deploy:
+    name: Deploy no Coolify
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar o Deploy Webhook
+        run: |
+          curl --fail-with-body --request GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+            --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
